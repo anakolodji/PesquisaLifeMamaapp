@@ -1,33 +1,74 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import base64
+import os
+
+import os
+
+print(f"Diretório atual: {os.getcwd()}")
+print(f"Arquivos no diretório: {os.listdir()}")
 
 # Configuração da página
 st.set_page_config(page_title="Pesquisa Life Mama", layout="wide")
 
 # Cores da marca
-cor_principal = "#F5A623"  # Laranja
-cor_secundaria = "#4A90E2"  # Azul
-cor_fundo = "#F9F9F9"  # Cinza claro
+COR_PRINCIPAL = "#F5A623"  # Laranja
+COR_SECUNDARIA = "#4A90E2"  # Azul
+COR_FUNDO = "#F9F9F9"  # Cinza claro
 
 # Estilo CSS personalizado
 st.markdown(f"""
     <style>
     .stApp {{
-        background-color: {cor_fundo};
+        background-color: {COR_FUNDO};
     }}
     .stButton > button {{
-        background-color: {cor_principal};
+        background-color: {COR_PRINCIPAL};
         color: white;
+        font-size: 20px;
+        padding: 10px 24px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+    }}
+    .stButton > button:hover {{
+        background-color: {COR_SECUNDARIA};
     }}
     h1, h2, h3 {{
-        color: {cor_secundaria};
+        color: {COR_SECUNDARIA};
+    }}
+    .question {{
+        font-size: 24px;
+        color: {COR_PRINCIPAL};
+        margin-bottom: 20px;
     }}
     </style>
     """, unsafe_allow_html=True)
 
+#Logo 
+def img_to_base64(img_path):
+    with open(img_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode('utf-8')
+
+logo_base64 = img_to_base64("/Users/anakolodji/Camada_1 (3).png")
+st.markdown(f"<img src='data:image/png;base64,{logo_base64}' width='200'>", unsafe_allow_html=True)
+
+logo_path = "/Users/anakolodji/Desktop/ia/Life Mama/PesquisaLifeMamaapp/app/Camada_1 (3).png"
+if os.path.exists(logo_path):
+    st.image(logo_path, width=200)
+else:
+    st.error("Logo não encontrado. Por favor, verifique o caminho da imagem.")
+
+try:
+    st.image("/Users/anakolodji/Camada_1 (3).png", width=200)
+except Exception as e:
+    st.error(f"Não foi possível carregar a imagem: {e}")
+    st.write("Continuando com o resto da aplicação...")
+
+#st.image("logo_life_mama.png", width=200)  # Substitua pelo caminho correto do logo
+
 # Título e introdução
-#t.image("logo_life_mama.png", width=200)  # Substitua pelo caminho correto do logo
 st.title("Pesquisa Life Mama")
 st.write("""
 Olá!
@@ -45,61 +86,125 @@ def salvar_respostas(respostas):
     df['timestamp'] = datetime.now()
     df.to_csv('respostas_pesquisa.csv', mode='a', header=False, index=False)
 
-# Formulário
-with st.form("pesquisa_form"):
-    q1 = st.radio("1. Você estaria disposta a pagar por um aplicativo que ajuda a organizar sua rotina e a cuidar do seu bem-estar?", 
-                  ["Sim", "Não"])
+# Inicialização de variáveis de estado
+if 'page' not in st.session_state:
+    st.session_state.page = 0
+if 'respostas' not in st.session_state:
+    st.session_state.respostas = {}
 
-    q2 = st.selectbox("2. Se sim, qual faixa de valor você considera justa para pagar mensalmente por um app que apoie sua organização e autocuidado?",
-                      ["Não estaria disposta a pagar", "Menos de R$10 / mês", "R$10 a R$20 / mês", "R$20 a R$30 / mês", "Mais de R$30 / mês"])
+# Lista de perguntas
+perguntas = [
+    {
+        "pergunta": "Você estaria disposta a pagar por um aplicativo que ajuda a organizar sua rotina e a cuidar do seu bem-estar?",
+        "tipo": "radio",
+        "opcoes": ["Sim", "Não"]
+    },
+    {
+        "pergunta": "Se sim, qual faixa de valor você considera justa para pagar mensalmente por um app que apoie sua organização e autocuidado?",
+        "tipo": "selectbox",
+        "opcoes": ["Não estaria disposta a pagar", "Menos de R$10 / mês", "R$10 a R$20 / mês", "R$20 a R$30 / mês", "Mais de R$30 / mês"]
+    },
+    {
+        "pergunta": "Quais recursos ou funcionalidades no aplicativo fariam com que você considerasse o pagamento da assinatura?",
+        "tipo": "multiselect",
+        "opcoes": ["Lembretes de rotina", "Dicas de autocuidado", "Monitoramento de saúde"]
+    },
+    {
+        "pergunta": "Selecione os itens que você possui na sua casa atualmente:",
+        "tipo": "multiselect",
+        "opcoes": ["Carro próprio", "TV a cabo ou streaming", "Computador ou notebook", "Internet banda larga", "Geladeira duplex", "Ar-condicionado", "Nenhum destes"]
+    },
+    {
+        "pergunta": "Atualmente, onde você busca soluções para organizar sua rotina ou cuidar de seu bem-estar e saúde mental?",
+        "tipo": "text_area"
+    },
+    {
+        "pergunta": "Quais são os maiores desafios ou limitações que você encontra nas soluções que usa hoje?",
+        "tipo": "text_area"
+    },
+    {
+        "pergunta": "O que faz você baixar um aplicativo novo?",
+        "tipo": "multiselect",
+        "opcoes": ["Recomendação de amigos ou conhecidos", "Avaliações positivas na loja de apps", "Funcionalidades úteis para meu dia a dia", "Facilidade de uso"]
+    },
+    {
+        "pergunta": "O que faz você manter um aplicativo no celular após baixá-lo?",
+        "tipo": "multiselect",
+        "opcoes": ["Uso frequente", "Atualizações e melhorias constantes", "Ajuda na organização e ganho de tempo", "Oferece benefícios ou recompensas"]
+    },
+    {
+        "pergunta": "Você já utilizou algum aplicativo especificamente voltado para mães?",
+        "tipo": "radio",
+        "opcoes": ["Sim", "Não"]
+    },
+    {
+        "pergunta": "Se sim, qual aplicativo?",
+        "tipo": "text_input"
+    },
+    {
+        "pergunta": "Se você toparia dar continuidade neste papo, deixe seu WhatsApp e email para participar de uma entrevista em profundidade.",
+        "tipo": "text_input"
+    }
+]
 
-    q3 = st.multiselect("3. Quais recursos ou funcionalidades no aplicativo fariam com que você considerasse o pagamento da assinatura?",
-                        ["Lembretes de rotina", "Dicas de autocuidado", "Monitoramento de saúde"])
-    q3_outro = st.text_input("Outro recurso:")
+# Função para exibir a pergunta atual
+def mostrar_pergunta(index):
+    pergunta = perguntas[index]
+    st.markdown(f"<p class='question'>{pergunta['pergunta']}</p>", unsafe_allow_html=True)
+    
+    if pergunta['tipo'] == 'radio':
+        resposta = st.radio("", pergunta['opcoes'], key=f"pergunta_{index}")
+    elif pergunta['tipo'] == 'selectbox':
+        resposta = st.selectbox("", pergunta['opcoes'], key=f"pergunta_{index}")
+    elif pergunta['tipo'] == 'multiselect':
+        resposta = st.multiselect("", pergunta['opcoes'], key=f"pergunta_{index}")
+    elif pergunta['tipo'] == 'text_area':
+        resposta = st.text_area("", key=f"pergunta_{index}")
+    elif pergunta['tipo'] == 'text_input':
+        resposta = st.text_input("", key=f"pergunta_{index}")
+    
+    st.session_state.respostas[f"pergunta_{index}"] = resposta
 
-    q4 = st.multiselect("4. Selecione os itens que você possui na sua casa atualmente:",
-                        ["Carro próprio", "TV a cabo ou streaming", "Computador ou notebook", "Internet banda larga", 
-                         "Geladeira duplex", "Ar-condicionado", "Nenhum destes"])
-    q4_outro = st.text_input("Outro item:")
+# Título e introdução
+st.image("logo_life_mama.png", width=200)  # Substitua pelo caminho correto do logo
+st.title("Pesquisa Life Mama")
 
-    q5 = st.text_area("5. Atualmente, onde você busca soluções para organizar sua rotina ou cuidar de seu bem-estar e saúde mental?")
+# Exibir página atual
+if st.session_state.page == 0:
+    st.write("""
+    Olá!
+    Estamos em desenvolvimento de uma solução digital voltada à rotina materna.
 
-    q6 = st.text_area("6. Quais são os maiores desafios ou limitações que você encontra nas soluções que usa hoje?")
+    Ao participar você estará contribuindo voluntariamente com seus dados, que não serão divulgados.
 
-    q7 = st.multiselect("7. O que faz você baixar um aplicativo novo?",
-                        ["Recomendação de amigos ou conhecidos", "Avaliações positivas na loja de apps", 
-                         "Funcionalidades úteis para meu dia a dia", "Facilidade de uso"])
-    q7_outro = st.text_input("Outro motivo para baixar:")
-
-    q8 = st.multiselect("8. O que faz você manter um aplicativo no celular após baixá-lo?",
-                        ["Uso frequente", "Atualizações e melhorias constantes", "Ajuda na organização e ganho de tempo", 
-                         "Oferece benefícios ou recompensas"])
-    q8_outro = st.text_input("Outro motivo para manter:")
-
-    q9 = st.radio("9. Você já utilizou algum aplicativo especificamente voltado para mães?", ["Sim", "Não"])
-
-    q10 = st.text_input("10. Se sim, qual aplicativo?")
-
-    q11 = st.text_input("11. Se você toparia dar continuidade neste papo, deixe seu WhatsApp e email para participar de uma entrevista em profundidade.")
-
-    submitted = st.form_submit_button("Enviar Respostas")
-
-    if submitted:
-        respostas = {
-            "q1": q1,
-            "q2": q2,
-            "q3": ", ".join(q3) + (f", {q3_outro}" if q3_outro else ""),
-            "q4": ", ".join(q4) + (f", {q4_outro}" if q4_outro else ""),
-            "q5": q5,
-            "q6": q6,
-            "q7": ", ".join(q7) + (f", {q7_outro}" if q7_outro else ""),
-            "q8": ", ".join(q8) + (f", {q8_outro}" if q8_outro else ""),
-            "q9": q9,
-            "q10": q10,
-            "q11": q11
-        }
-        salvar_respostas(respostas)
-        st.success("Obrigado por participar da nossa pesquisa!")
+    Para tirar dúvidas, entre em contato com 
+    Valéria Rezende, Chief Marketing Officer CMO, pelo telefone: 11 98144 7031
+    """)
+    if st.button("Começar"):
+        st.session_state.page += 1
+        st.experimental_rerun()
+elif st.session_state.page <= len(perguntas):
+    mostrar_pergunta(st.session_state.page - 1)
+    col1, col2, col3 = st.columns([1,1,1])
+    with col1:
+        if st.button("Anterior") and st.session_state.page > 1:
+            st.session_state.page -= 1
+            st.experimental_rerun()
+    with col3:
+        if st.button("Próxima"):
+            if st.session_state.page < len(perguntas):
+                st.session_state.page += 1
+                st.experimental_rerun()
+            else:
+                salvar_respostas(st.session_state.respostas)
+                st.session_state.page = len(perguntas) + 1
+                st.experimental_rerun()
+else:
+    st.success("Obrigado por participar da nossa pesquisa!")
+    if st.button("Reiniciar"):
+        st.session_state.page = 0
+        st.session_state.respostas = {}
+        st.experimental_rerun()
 
 # Rodapé
 st.markdown("---")
