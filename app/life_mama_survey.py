@@ -27,7 +27,7 @@ st.markdown(f"""
     """, unsafe_allow_html=True)
 
 # Título e introdução
-st.image("logo_life_mama.png", width=200)  # Substitua pelo caminho correto do logo
+#t.image("logo_life_mama.png", width=200)  # Substitua pelo caminho correto do logo
 st.title("Pesquisa Life Mama")
 st.write("""
 Olá!
