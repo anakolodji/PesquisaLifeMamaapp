@@ -1,13 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import base64
 import os
-
-import os
-
-print(f"Diretório atual: {os.getcwd()}")
-print(f"Arquivos no diretório: {os.listdir()}")
 
 # Configuração da página
 st.set_page_config(page_title="Pesquisa Life Mama", layout="wide")
@@ -35,50 +29,16 @@ st.markdown(f"""
     .stButton > button:hover {{
         background-color: {COR_SECUNDARIA};
     }}
-    h1, h2, h3 {{
-        color: {COR_SECUNDARIA};
+    h1, h2, h3, p {{
+        color: black !important;
     }}
     .question {{
         font-size: 24px;
-        color: {COR_PRINCIPAL};
+        color: {COR_SECUNDARIA} !important;
         margin-bottom: 20px;
     }}
     </style>
     """, unsafe_allow_html=True)
-
-#Logo 
-def img_to_base64(img_path):
-    with open(img_path, "rb") as img_file:
-        return base64.b64encode(img_file.read()).decode('utf-8')
-
-logo_base64 = img_to_base64("/Users/anakolodji/Camada_1 (3).png")
-st.markdown(f"<img src='data:image/png;base64,{logo_base64}' width='200'>", unsafe_allow_html=True)
-
-logo_path = "/Users/anakolodji/Desktop/ia/Life Mama/PesquisaLifeMamaapp/app/Camada_1 (3).png"
-if os.path.exists(logo_path):
-    st.image(logo_path, width=200)
-else:
-    st.error("Logo não encontrado. Por favor, verifique o caminho da imagem.")
-
-try:
-    st.image("/Users/anakolodji/Camada_1 (3).png", width=200)
-except Exception as e:
-    st.error(f"Não foi possível carregar a imagem: {e}")
-    st.write("Continuando com o resto da aplicação...")
-
-#st.image("logo_life_mama.png", width=200)  # Substitua pelo caminho correto do logo
-
-# Título e introdução
-st.title("Pesquisa Life Mama")
-st.write("""
-Olá!
-Estamos em desenvolvimento de uma solução digital voltada à rotina materna.
-
-Ao participar você estará contribuindo voluntariamente com seus dados, que não serão divulgados.
-
-Para tirar dúvidas, entre em contato com 
-Valéria Rezende, Chief Marketing Officer CMO, pelo telefone: 11 98144 7031
-""")
 
 # Função para salvar respostas
 def salvar_respostas(respostas):
@@ -150,7 +110,7 @@ perguntas = [
 # Função para exibir a pergunta atual
 def mostrar_pergunta(index):
     pergunta = perguntas[index]
-    st.markdown(f"<p class='question'>{pergunta['pergunta']}</p>", unsafe_allow_html=True)
+    st.markdown(f"<div class='question'>{pergunta['pergunta']}</div>", unsafe_allow_html=True)
     
     if pergunta['tipo'] == 'radio':
         resposta = st.radio("", pergunta['opcoes'], key=f"pergunta_{index}")
@@ -165,8 +125,14 @@ def mostrar_pergunta(index):
     
     st.session_state.respostas[f"pergunta_{index}"] = resposta
 
+# Logo
+logo_path = os.path.join(os.path.dirname(__file__), "Camada_1 (3).png")
+if os.path.exists(logo_path):
+    st.image(logo_path, width=200)
+else:
+    st.warning(f"Logo não encontrado em: {logo_path}")
+
 # Título e introdução
-st.image("logo_life_mama.png", width=200)  # Substitua pelo caminho correto do logo
 st.title("Pesquisa Life Mama")
 
 # Exibir página atual
@@ -209,3 +175,7 @@ else:
 # Rodapé
 st.markdown("---")
 st.write("© 2024 Life Mama. Todos os direitos reservados.")
+
+# Depuração
+st.sidebar.write(f"Diretório atual: {os.getcwd()}")
+st.sidebar.write(f"Arquivos no diretório: {os.listdir()}")
