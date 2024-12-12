@@ -66,8 +66,8 @@ perguntas = [
     },
     {
         "pergunta": "Quais recursos ou funcionalidades no aplicativo fariam com que você considerasse o pagamento da assinatura?",
-        "tipo": "multiselect",
-        "opcoes": ["Lembretes de rotina", "Dicas de autocuidado", "Monitoramento de saúde"]
+        "tipo": "multiselect_com_outros",
+        "opcoes": ["Lembretes de rotina", "Dicas de autocuidado", "Monitoramento de saúde", "Outros"]
     },
     {
         "pergunta": "Selecione os itens que você possui na sua casa atualmente:",
@@ -118,6 +118,11 @@ def mostrar_pergunta(index):
         resposta = st.selectbox("", pergunta['opcoes'], key=f"pergunta_{index}")
     elif pergunta['tipo'] == 'multiselect':
         resposta = st.multiselect("", pergunta['opcoes'], key=f"pergunta_{index}")
+    elif pergunta['tipo'] == 'multiselect_com_outros':
+        resposta = st.multiselect("", pergunta['opcoes'], key=f"pergunta_{index}")
+        if "Outros" in resposta:
+            outros = st.text_input("Por favor, especifique:", key=f"outros_{index}")
+            resposta = [op for op in resposta if op != "Outros"] + [f"Outros: {outros}"]
     elif pergunta['tipo'] == 'text_area':
         resposta = st.text_area("", key=f"pergunta_{index}")
     elif pergunta['tipo'] == 'text_input':
@@ -148,29 +153,29 @@ if st.session_state.page == 0:
     """)
     if st.button("Começar"):
         st.session_state.page += 1
-        st.experimental_rerun()
+        st.rerun()
 elif st.session_state.page <= len(perguntas):
     mostrar_pergunta(st.session_state.page - 1)
     col1, col2, col3 = st.columns([1,1,1])
     with col1:
         if st.button("Anterior") and st.session_state.page > 1:
             st.session_state.page -= 1
-            st.experimental_rerun()
+            st.rerun()
     with col3:
         if st.button("Próxima"):
             if st.session_state.page < len(perguntas):
                 st.session_state.page += 1
-                st.experimental_rerun()
+                st.rerun()
             else:
                 salvar_respostas(st.session_state.respostas)
                 st.session_state.page = len(perguntas) + 1
-                st.experimental_rerun()
+                st.rerun()
 else:
     st.success("Obrigado por participar da nossa pesquisa!")
     if st.button("Reiniciar"):
         st.session_state.page = 0
         st.session_state.respostas = {}
-        st.experimental_rerun()
+        st.rerun()
 
 # Rodapé
 st.markdown("---")
